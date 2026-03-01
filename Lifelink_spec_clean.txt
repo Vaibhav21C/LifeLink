@@ -1,0 +1,20 @@
+Core Objective: Eliminate the 510 minute human delay in emergency dispatch by automating hospital selection and traffic-aware routing in Narmadapuram.
+1. THE TECH STACK
+* Frontend: React.js + Tailwind CSS.
+* Map Engine: Leaflet.js (Open Source).
+* Routing Engine: Mapbox Directions API (using driving-traffic profile).
+* Data Extraction: Overpass API (to fetch live OSM nodes).
+* Simulation: Python (FastAPI/Flask) for the backend logic.
+2. KEY ALGORITHM: TIME-DEPENDENT A (TDA)**
+* Do not use standard distance-based A*.
+* The "Edge Weight" must be: $Weight = \frac{Distance}{Current Speed \times CivicFactor}$.
+* Civic Factor: A multiplier (e.g., 1.2x) that accounts for the "Indian Civic Sense" where ambulances get a slight speed boost but are still limited by physical traffic density.
+3. CORE FEATURES TO BUILD
+* Live Hospital Extraction: Use Overpass API to find all nodes with amenity=hospital near the incident (e.g., Keshav, Sanjivani, St. Joseph's).
+* Traffic Heatmap: Color-code the route based on Mapbox congestion data: Green (Fast), Orange (Moderate), Red (Heavy/Deadlock).
+* Dynamic ETA Widget: A real-time "Time Left" counter that updates if the ambulance encounters new traffic jams.
+* Simulation Module: A "Start Mission" button that animates a siren icon moving along the path coordinates at variable speeds based on traffic data.
+4. PRESENTATION "WOW" FEATURES
+* Rerouting Logic: If a road becomes "Deadlocked" (Red), the system must automatically recalculate to the next best hospital.
+* Comparison Mode: Show a "Static Path" vs. our "LifeLink Traffic Path" to prove time savings.
+
