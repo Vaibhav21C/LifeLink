@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeLink ER Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body class="bg-gray-900 text-white font-sans p-8">
+
+    <div class="max-w-6xl mx-auto grid grid-cols-2 gap-8">
+        <div class="bg-gray-800 rounded-lg p-4 shadow-2xl h-[600px] flex flex-col">
+            <h2 class="text-xl font-bold text-blue-400 mb-2">🛰️ Live Green Corridor Tracking</h2>
+            <div id="map" class="w-full h-full rounded border-2 border-gray-600"></div>
+        </div>
+
+        <div id="main-container" class="bg-gray-800 rounded-lg p-8 shadow-2xl transition-all duration-500 h-[600px] flex flex-col">
+            <header class="border-b border-gray-700 pb-4 mb-4">
+                <h1 class="text-2xl font-bold text-red-500">🏥 ER Portal</h1>
+            </header>
+
+            <div id="no-patients" class="text-center py-20 my-auto">
+                <p class="text-gray-400 text-xl">No incoming trauma patients.</p>
+            </div>
+
+            <div id="patient-card" class="hidden flex-col h-full">
+                <h2 class="text-xl font-bold text-yellow-400 mb-4">⚠️ INCOMING TRAUMA</h2>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-gray-700 p-3 rounded">
+                        <p class="text-gray-400 text-xs">Patient Name</p>
+                        <p id="patient-name" class="text-lg font-bold">--</p>
+                    </div>
+                    <div class="bg-gray-700 p-3 rounded">
+                        <p class="text-gray-400 text-xs">Blood Group</p>
+                        <p id="blood-group" class="text-lg font-bold text-red-400">--</p>
+                    </div>
+                </div>
+                <div class="bg-gray-900 border border-red-500 p-4 rounded flex-grow mb-4">
+                    <p class="text-red-500 font-bold mb-2">AWS Bedrock Triage</p>
+                    <p id="triage-summary" class="font-mono text-gray-300 whitespace-pre-line text-sm">Waiting for scan...</p>
+                </div>
+                <button onclick="acknowledgePatient()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded mt-auto">
+                    ACKNOWLEDGE & CLEAR
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- MAP INITIALIZATION ---
+        // Centered roughly on Itarsi
+        var map = L.map('map').setView([22.6135, 77.7780], 15);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: 'LifeLink Tracking'
+        }).addTo(map);
+
+        // Map Markers
+        var hospIcon = L.icon({iconUrl: 'https://cdn-icons-png.flaticon.com/512/33/33777.png', iconSize: [30, 30]}); // Basic Hospital Icon
+        var ambIcon = L.icon({iconUrl: 'https://cdn-icons-png.flaticon.com/512/1032/1032986.png', iconSize: [40, 40]}); // Ambulance Icon
+
+        L.marker([22.6150, 77.7750], {icon: hospIcon}).addTo(map).bindPopup("Govt Hospital Itarsi");
+        L.circleMarker([22.6116, 77.7810], {color: 'red', radius: 10}).addTo(map).bindPopup("Crash Site");
+        
+        var ambulanceMarker = null;
+        var trafficLightMarkers = {};
+
+        // --- POLLING LOGIC ---
+        async function fetchIncomingPatients() {
+            try {
+                const response = await fetch('/api/er-updates');
+                const data = await response.json();
+                
+                if (data.status === "incoming") {
+                    document.getElementById('no-patients').classList.add('hidden');
+                    document.getElementById('patient-card').classList.remove('hidden');
+                    document.getElementById('main-container').classList.add('border-2', 'border-red-600');
+                    
+                    if(data.patient) {
+                        document.getElementById('patient-name').innerText = data.patient.name;
+                        document.getElementById('blood-group').innerText = data.patient.blood_group;
+                        document.getElementById('triage-summary').innerText = data.ai_summary;
+                    }
+
+                    // Move Ambulance on Map
+                    if(data.amb_lat !== 0) {
+                        if(!ambulanceMarker) {
+                            ambulanceMarker = L.marker([data.amb_lat, data.amb_lon], {icon: ambIcon}).addTo(map);
+                        } else {
+                            ambulanceMarker.setLatLng([data.amb_lat, data.amb_lon]);
+                        }
+                    }
+
+                    // Update Traffic Lights dynamically
+                    for (const [id, lightData] of Object.entries(data.lights)) {
+                        let color = lightData.status === "GREEN" ? "#00ff00" : "#ff0000";
+                        if (!trafficLightMarkers[id]) {
+                            trafficLightMarkers[id] = L.circleMarker([lightData.lat, lightData.lon], {color: color, fillOpacity: 1, radius: 8}).addTo(map);
+                        } else {
+                            trafficLightMarkers[id].setStyle({color: color});
+                        }
+                    }
+                }
+            } catch (error) {}
+        }
+
+        async function acknowledgePatient() {
+            await fetch('/api/clear-er', { method: 'POST' });
+            document.getElementById('patient-card').classList.add('hidden');
+            document.getElementById('no-patients').classList.remove('hidden');
+            document.getElementById('main-container').classList.remove('border-2', 'border-red-600');
+            document.getElementById('triage-summary').innerText = "Waiting for scan...";
+            if(ambulanceMarker) { map.removeLayer(ambulanceMarker); ambulanceMarker = null; }
+        }
+
+        // Poll every 1 second for smooth map tracking
+        setInterval(fetchIncomingPatients, 1000);
+    </script>
+</body>
+</html>
