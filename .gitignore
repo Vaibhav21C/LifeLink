@@ -19,3 +19,11 @@ Thumbs.db
 
 # Misc
 *.log
+
+# Extra utility scripts
+clean_file.py
+read_file.py
+read_repr.py
+read_safe.py
+Lifelink_spec.txt
+Lifelink_spec_clean.txt
