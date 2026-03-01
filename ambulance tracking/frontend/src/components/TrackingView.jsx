@@ -610,6 +610,29 @@ export default function TrackingView({ incidentPos, onBack }) {
                                 </div>
                             </div>
                         )}
+
+                        {/* ======== Hospital Card (Stacked to prevent overlap) ======== */}
+                        {selectedHospital && (
+                            <div style={{ width: 250, marginTop: 12 }}>
+                                <div style={{ ...glass, borderRadius: 16, padding: '12px 14px' }}>
+                                    <div className="flex items-center gap-2 mb-1.5">
+                                        <span style={{ fontSize: 12 }}>🏥</span>
+                                        <span style={{ fontSize: 9, fontWeight: 600, color: '#34a853', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Next Hospital</span>
+                                    </div>
+                                    <p style={{ fontSize: 12, fontWeight: 700, color: '#e8eaed', lineHeight: 1.3, marginBottom: 3 }}>{selectedHospital.name}</p>
+                                    <div className="flex items-center gap-2">
+                                        <span style={{ fontSize: 10, color: '#9aa0a6' }}>{selectedHospital.distance_km} km</span>
+                                        <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#9aa0a6' }}></span>
+                                        <span style={{ fontSize: 10, color: '#9aa0a6' }}>{formatDuration(remaining)} ETA</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-1.5">
+                                        <span style={{ fontSize: 9, color: '#9aa0a6' }}>Capacity:</span>
+                                        <div className="flex gap-0.5">{[1, 2, 3, 4, 5].map(i => <div key={i} style={{ width: 7, height: 7, borderRadius: 2, background: i <= 3 ? '#34a853' : 'rgba(255,255,255,0.1)' }}></div>)}</div>
+                                        <span style={{ fontSize: 9, color: '#34a853', fontWeight: 600 }}>Available</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* ======== TOP-RIGHT: ETA Widget ======== */}
@@ -671,29 +694,7 @@ export default function TrackingView({ incidentPos, onBack }) {
                         )}
                     </div>
 
-                    {/* ======== LEFT: Hospital Card ======== */}
-                    {selectedHospital && (
-                        <div className="absolute top-36 left-5 z-[200]" style={{ width: 250 }}>
-                            <div style={{ ...glass, borderRadius: 16, padding: '12px 14px' }}>
-                                <div className="flex items-center gap-2 mb-1.5">
-                                    <span style={{ fontSize: 12 }}>🏥</span>
-                                    <span style={{ fontSize: 9, fontWeight: 600, color: '#34a853', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Next Hospital</span>
-                                </div>
-                                <p style={{ fontSize: 12, fontWeight: 700, color: '#e8eaed', marginBottom: 3 }}>{selectedHospital.name}</p>
-                                <div className="flex items-center gap-2">
-                                    <span style={{ fontSize: 10, color: '#9aa0a6' }}>{selectedHospital.distance_km} km</span>
-                                    <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#9aa0a6' }}></span>
-                                    <span style={{ fontSize: 10, color: '#9aa0a6' }}>{formatDuration(remaining)} ETA</span>
-                                </div>
-                                <div className="flex items-center gap-2 mt-1.5">
-                                    <span style={{ fontSize: 9, color: '#9aa0a6' }}>Capacity:</span>
-                                    <div className="flex gap-0.5">{[1, 2, 3, 4, 5].map(i => <div key={i} style={{ width: 7, height: 7, borderRadius: 2, background: i <= 3 ? '#34a853' : 'rgba(255,255,255,0.1)' }}></div>)}</div>
-                                    <span style={{ fontSize: 9, color: '#34a853', fontWeight: 600 }}>Available</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
+                    {/* ======== LEFT: Hospital Card (Moved to top container to prevent overlap) ======== */}
                     {/* ======== Traffic Intelligence Bar ======== */}
                     <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-[200]" style={{ width: 380 }}>
                         <div style={{ ...glass, borderRadius: 14, padding: '8px 14px' }}>
